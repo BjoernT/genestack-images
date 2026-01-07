@@ -1,5 +1,5 @@
 ---
-name: Create and publish a nova image
+name: Create and publish a Nova image
 
 permissions:
   actions: read
@@ -26,7 +26,6 @@ on:
         type: choice
         options:
           - master
-          - unmaintained/2024.1
           - stable/2025.1
       novnc-version:
         description: 'Version of novnc to use'
@@ -49,7 +48,7 @@ env:
   #                   workflow_dispatch event, so they're being stored in the environment variables. This is a
   #                   workaround until there's a better way to handle this.
   openstack_constraints: >
-    ["unmaintained/2024.1", "stable/2025.1"]
+    ["stable/2025.1"]
   novnc_version: >
     ["v1.6.0"]
 
@@ -103,6 +102,9 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      - name: Set registry URL
+        run: |
+          echo "GHCR_URL=${REGISTRY}/${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
@@ -120,6 +122,8 @@ jobs:
             OS_CONSTRAINTS=${{ matrix.openstack-constraints }}
             NOVNC_VERSION=${{ matrix.novnc-version }}
             CACHEBUST=${{ github.sha }}
+            GHCR_URL=${{ env.GHCR_URL }}
+            CEPH_CLIENT_TAG=3.13-trixie-latest
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.33.1  # using latest trivy scanner
         if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' }}
@@ -178,3 +182,5 @@ jobs:
             OS_CONSTRAINTS=${{ matrix.openstack-constraints }}
             NOVNC_VERSION=${{ matrix.novnc-version }}
             CACHEBUST=${{ github.sha }}
+            GHCR_URL=${{ env.GHCR_URL }}
+            CEPH_CLIENT_TAG=3.13-trixie-latest

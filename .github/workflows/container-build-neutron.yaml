@@ -26,7 +26,6 @@ on:
         type: choice
         options:
           - master
-          - unmaintained/2024.1
           - stable/2025.1
       project-version:
         description: 'Version of OpenStack Neutron to build, defaults to openstack-constraints if unspecified'
@@ -41,7 +40,7 @@ env:
   #                   workflow_dispatch event, so they're being stored in the environment variables. This is a
   #                   workaround until there's a better way to handle this.
   openstack_constraints: >
-    ["unmaintained/2024.1", "stable/2025.1"]
+    ["stable/2025.1"]
 
 jobs:
   init:
@@ -80,9 +79,7 @@ jobs:
           echo "CATEGORY_NAME=${VERSION}-${NAME}" >> $GITHUB_ENV
       - name: Set RXT Version
         run: |
-          if [ "${{ env.OS_VERSION_PARSE }}" = "2024.1" ]; then
-            echo "RXT_VERSION=sync-add-mode-2024.1" >> $GITHUB_ENV
-          elif [ "${{ env.OS_VERSION_PARSE }}" = "2025.1" ]; then
+          if [ "${{ env.OS_VERSION_PARSE }}" = "2025.1" ]; then
             echo "RXT_VERSION=sync-add-mode-2025.1" >> $GITHUB_ENV
           else
             echo "RXT_VERSION=sync-add-mode" >> $GITHUB_ENV
@@ -98,6 +95,9 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      - name: Set registry URL
+        run: |
+          echo "GHCR_URL=${REGISTRY}/${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
@@ -115,6 +115,7 @@ jobs:
             OS_CONSTRAINTS=${{ matrix.openstack-constraints }}
             RXT_VERSION=${{ env.RXT_VERSION }}
             CACHEBUST=${{ github.sha }}
+            GHCR_URL=${{ env.GHCR_URL }}
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.33.1  # using latest trivy scanner
         if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' }}
@@ -173,3 +174,4 @@ jobs:
             OS_CONSTRAINTS=${{ matrix.openstack-constraints }}
             RXT_VERSION=${{ env.RXT_VERSION }}
             CACHEBUST=${{ github.sha }}
+            GHCR_URL=${{ env.GHCR_URL }}

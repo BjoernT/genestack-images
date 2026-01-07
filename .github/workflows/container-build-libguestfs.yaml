@@ -21,11 +21,11 @@ on:
       libguestfs-version:
         description: 'Version of libguestfs to use'
         required: true
-        default: "v1.56.1"
+        default: "v1.56.2"
         type: choice
         options:
           - "master"
-          - "v1.56.1"
+          - "v1.56.2"
       libguestfs-hivex-version:
         description: 'Version of libguestfs-hivex to use'
         required: true
@@ -45,6 +45,7 @@ env:
     ["v1.56.1"]
   libguestfs_hivex_release: >
     ["v1.3.24"]
+
 jobs:
   init:
     runs-on: ubuntu-latest
@@ -95,6 +96,9 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      - name: Set registry URL
+        run: |
+          echo "GHCR_URL=${REGISTRY}/${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
@@ -111,6 +115,7 @@ jobs:
             GUESTFS_VERSION=${{ matrix.libguestfs-version }}
             GUESTFS_HIVEX_VERSION=${{ matrix.libguestfs-hivex-version }}
             CACHEBUST=${{ github.sha }}
+            GHCR_URL=${{ env.GHCR_URL }}
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.33.1  # using latest trivy scanner
         if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' }}
@@ -168,3 +173,4 @@ jobs:
             GUESTFS_VERSION=${{ matrix.libguestfs-version }}
             GUESTFS_HIVEX_VERSION=${{ matrix.libguestfs-hivex-version }}
             CACHEBUST=${{ github.sha }}
+            GHCR_URL=${{ env.GHCR_URL }}
