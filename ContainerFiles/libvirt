@@ -4,11 +4,13 @@
 
 # Stage 1: libguestfs_base
 ARG BUILT_TAG=v3.5.1-latest
-ARG BUILT_TAG_2=v1.56.1-latest
-FROM ghcr.io/rackerlabs/genestack-images/ovs:${BUILT_TAG} AS dependency_build
+ARG BUILT_TAG_2=v1.56.2-latest
+ARG GHCR_URL=ghcr.io/rackerlabs/genestack-images
+FROM ${GHCR_URL}/ovs:${BUILT_TAG} AS dependency_build
 
 # Final Stage: dependency_build
-FROM ghcr.io/rackerlabs/genestack-images/libguestfs:${BUILT_TAG_2}
+ARG GHCR_URL=ghcr.io/rackerlabs/genestack-images
+FROM ${GHCR_URL}/libguestfs:${BUILT_TAG_2}
 ARG CACHEBUST=0
 LABEL maintainer="Rackspace"
 LABEL vendor="Rackspace OpenStack Team"
